@@ -9,7 +9,7 @@ def getPrices(): #Returns a dictionary
     #print(priceList['ETHBTC'])
     return currentPriceDictionary #A Dictionary
 
-def setFavorites():
+def setExchangeFavorites():
     '''
     print("What are your favorite coin? The format needed is something converted to something, so BNBBTC or ZECUSDC")
     read answer
@@ -21,6 +21,20 @@ def setFavorites():
     favorites = ["BTCUSDC", "ZECUSDC", "NPXSBTC"] #Add your favorite coins to be printed here.
     verifyInput(favorites)
     return favorites #A List
+
+def setFavoriteCoins():
+    '''
+    print("What are your favorite coin? The format needed is something converted to something, so BTC or ZEC")
+    read answer
+    #Delit using the spaces, then make it a list.
+    favorites = list(answer.split(" "))
+    return favorites
+
+    '''
+    favorites = ["BTC", "ZEC", "NPXS"] #Add your favorite coins to be printed here.
+    return favorites #A List
+def clear():
+    sys.stdout.write("\033[2J")  # Erase everything
 
 def verifyInput(favorites):
     current = getPrices()
@@ -43,7 +57,7 @@ def verifyInput(favorites):
 
 def printCurrentFavorites(): #Prints the current favorite coins
     current = getPrices()
-    favorites = getFavorites()
+    favorites = setExchangeFavorites()
 
     for item in favorites:
         print(item + ": " + current[item])
@@ -71,37 +85,131 @@ def getDateTime():
         print("date and time =", dt_string)
         time.sleep(1)
 
-def printCurrentFavorites(favorites,goTo): #Prints the current favorite coins
+def checkBalances(ExchangeFavorites,CoinFavorites,destination):
+    print("Lets check the balances:")
+    now = datetime.now()  # Get the date and time
+    theTime = now.strftime("%d/%m/%Y %H:%M:%S")
+    current = "Deleted"  # Erase the previous entry
+    current = binance.balances() #Returns a dictionary full of all coins.
+    favSize = len(CoinFavorites)
+
+    UpdateTime = "\nUpdate: " + theTime + "\n"
+    print(UpdateTime)
+
+    for count, item in enumerate(CoinFavorites):
+    #"item" This is a favorited coin. It is a dictionary for free and locked amounts. A dictionary of a dictionary.
+        currentItem = item + " available: " + current[item]['free']
+        currentItem = currentItem + " \n" + item + " locked: " + current[item]['locked']
+        total = float(current[item]['free']) + float(current[item]['locked'])
+        currentItem = currentItem + " \nTotal Owned: " + str(total) + " " + item + "\n"
+        printToScreen(currentItem, count, favSize)
+        sys.stdout.flush()
+
+    if destination is 1:
+        return
+    else:
+        print("\n\nPress Enter to continue...")
+        input()
+        fullMenu(ExchangeFavorites,CoinFavorites)
+
+def openOrders(ExchangeFavorites,CoinFavorites,destination): #Requires Echange Favs
+    favSize = len(ExchangeFavorites)
+    now = datetime.now()  # Get the date and time
+    theTime = now.strftime("%d/%m/%Y %H:%M:%S")
+    UpdateTime = "\nUpdate: " + theTime + "\n"
+    print("Displaying all Open Orders:")
+    print(UpdateTime)
+
+    for count, item in enumerate(ExchangeFavorites):  # Item is the current echangetoken Ex. BTCUSDC
+        currentItem = binance.openOrders(item)  # Returns a dictionary for current item
+        print(item + ":")  # Show the currency being shown
+        print("===================================================\n")
+        for count, order in enumerate(currentItem):  # Sift through the list of dictionaries and show unique order ID's
+            readableTime = time.ctime(order['time'] / 1000)
+            currentOrder = "Time:" + readableTime + " Order ID:" + str(order['orderId']) + " Action:" + str(
+                order['side']) + "\nPrice:" + str(order['price']) + " Amount:" + str(
+                order['origQty']) + "\nStatus:" + str(order['status']) + "\n"
+            if str(order['status']) != "CANCELED":  # Ignore canceled orders
+                printToScreen(currentOrder, count, favSize)
+        sys.stdout.flush()
+    if destination is 1: #Go to previous function
+        return 0
+    else: #Go back home
+        print("Press Enter to continue...")
+        input()
+        fullMenu(ExchangeFavorites, CoinFavorites)
+
+def allOrders(ExchangeFavorites,CoinFavorites):
+    favSize = len(ExchangeFavorites)
+    now = datetime.now()  # Get the date and time
+    theTime = now.strftime("%d/%m/%Y %H:%M:%S")
+    UpdateTime = "\nUpdate: " + theTime + "\n"
+    print("Displaying all Orders:")
+    print(UpdateTime)
+
+    for count, item in enumerate(ExchangeFavorites): #Item is the current echangetoken Ex. BTCUSDC
+        currentItem = binance.allOrders(item) #Returns a dictionary for current item
+        print(item + ":") #Show the currency being shown
+        print("===================================================\n")
+        for count, order in enumerate(currentItem): #Sift through the list of dictionaries and show unique order ID's
+            readableTime = time.ctime(order['time']/1000)
+            currentOrder = "Time:" + readableTime + " Order ID:" + str(order['orderId']) + " Action:" + str(order['side']) + "\nPrice:" + str(order['price']) + " Amount:" + str(order['origQty']) + "\nStatus:" + str(order['status']) + "\n"
+            if str(order['status']) != "CANCELED": #Ignore canceled orders
+                printToScreen(currentOrder, count, favSize)
+        sys.stdout.flush()
+    print("Press Enter to continue...")
+    input()
+    fullMenu(ExchangeFavorites,CoinFavorites)
+
+def printCurrentFavorites(ExchangeFavorites,CoinFavorites,goTo): #Prints the current favorite coins with their price
     while True:
         try:
-            sys.stdout.write("\033[2J") #Erase everything
+            clear()
             now = datetime.now() #Get the date and time
             theTime = now.strftime("%d/%m/%Y %H:%M:%S")
             current = "Deleted" #Erase the previous entry
             current = getPrices() #Get the current Prices. Binance returns all coins avaiable.
-            favSize = len(favorites)
+            favSize = len(ExchangeFavorites)
 
             UpdateTime = "\nUpdate: " + theTime + "\n"
             print(UpdateTime)
 
-            for count, item in enumerate(favorites):
+            for count, item in enumerate(ExchangeFavorites):
                 currentItem = item + ": " + current[item]
                 printToScreen(currentItem,count,favSize)
                 sys.stdout.flush()
             time.sleep(2)
         except:
-            print("Going to main manu:")
+            print("Going to main menu:")
             if goTo is "limited":
-                limitedMenu(favorites)
+                limitedMenu(ExchangeFavorites)
+            elif goTo is '1':
+                return
             else:
-                fullMenu(favorites)
+                fullMenu(ExchangeFavorites,CoinFavorites)
+
+def printCurrentFavoriteOnce(ExchangeFavorites,CoinFavorites): #Prints the current favorite coins with their price
+    try:
+        now = datetime.now() #Get the date and time
+        theTime = now.strftime("%d/%m/%Y %H:%M:%S")
+        current = getPrices() #Get the current Prices. Binance returns all coins avaiable.
+        favSize = len(ExchangeFavorites)
+
+        UpdateTime = "\nUpdate: " + theTime + "\n"
+        print(UpdateTime)
+
+        for count, item in enumerate(ExchangeFavorites):
+            currentItem = item + ": " + current[item]
+            printToScreen(currentItem,count,favSize)
+            sys.stdout.flush()
+    except:
+        print("Could not get current prices.")
+        print("Error in: printCurrentFavoriteOnce()")
 
 def getAPI():
     #Input your API keys here.
     # Set the keys. binance.set("API Key","Secret")
-    APIKey = "5GYxIkoBqCQJMzgqZH2sf193FFTVQX52MNVsdNamGpofoFVSm2ftIqyFemvkmQPP"
-    APISecret = "3t6AkChBnIaDHwzSzdTZUU6m550Q2B3KCBpw8nNpK0giSLSkw2m4loP9NiHkoOXJ"
-
+    
     #APIKey = "INPUT_KEY_HERE"
     #APISecret = "INPUT_SECRET_HERE"
 
@@ -109,23 +217,74 @@ def getAPI():
         print("WARNING: You did not input your API keys. All this program can do for you is show you current prices")
         return 0
 
-    binance.set("5GYxIkoBqCQJMzgqZH2sf193FFTVQX52MNVsdNamGpofoFVSm2ftIqyFemvkmQPP", "3t6AkChBnIaDHwzSzdTZUU6m550Q2B3KCBpw8nNpK0giSLSkw2m4loP9NiHkoOXJ")
-    #binance.set(APIKey, APISecret)
+    #binance.set("Key", "Secret")
+    binance.set(APIKey, APISecret)
     print("Your keys are all set.")
     return 1
 
+def createOrder(ExchangeFavorites, CoinFavorites):
+    print("Lets place an order:")
+    print("Open Orders:")
+    openOrders(ExchangeFavorites, CoinFavorites, 1)
+
+    print("Current Balances:")
+    checkBalances(ExchangeFavorites, CoinFavorites, 1)
+
+    FavList = "\nYour favorite Exchanges:"
+    for item in ExchangeFavorites:
+        FavList = FavList + " " + item + " "
+    print(FavList)
+
+    print("Please enter the coin exchange you are making an order for, the value of the coin, and the amount you are buying.")
+    print("Ex. \"BTCUSDC Buy 11713 0.020189\" or \"NPXSBTC Sell 9990 0.00000012\"")
+    answer = input()
+    answers = answer.split()
+    try:
+        if answers[1] in ["Buy", "buy," "b", "B"]:
+            print("Buying")
+            binance.order(answers[0], binance.BUY, answers[2], answers[3])
+        elif answers[1] in ["Sell", "sell," "s", "S"]:
+            print("Selling")
+            binance.order(answers[0], binance.SELL, answers[2], answers[3])
+        elif answers[0] is "e":
+            fullMenu(ExchangeFavorites, CoinFavorites)
+            print(answers[1])
+            #Print current balance and current price
+        print("Success.")
+        time.sleep(1)
+    except:
+        print("Something went wrong. Check your numbers.")
+    fullMenu(ExchangeFavorites, CoinFavorites)
+
+def cancelOrder(ExchangeFavorites, CoinFavorites):
+    print("Lets cancel an order:")
+    openOrders(ExchangeFavorites, CoinFavorites,1)
+    print("Input the exchange and order ID (Ex. \"BTCUSDC 12345678\")")
+    answer = input()
+    answers = answer.split()
+    try:
+        binance.cancel(answers[0], orderId=answers[1])
+        print("Success.")
+        time.sleep(1)
+    except:
+        print("Something went wrong. Check your spelling.")
+    fullMenu(ExchangeFavorites,CoinFavorites)
+
 def Banner():
-    print("######################################################################################")
-    print("###########################Crypto Trader for Binance##################################")
-    print("######################################################################################")
+    sys.stdout.write("\033[2J") #Erase everything
+    print("###################################################")
+    print("###########Crypto Trader for Binance###############")
+    print("###################################################")
     print("Welcome to Crypto Trader for Binance.")
-    print("The creator of this script is not responsible for the stupid things you can do with it")
+    print("The creator of this script is not responsible for ")
+    print("the stupid things you can do with this.")
     print("Be smart with your money.")
     print("Press Enter to continue...")
     input()
     sys.stdout.write("\033[2J")  # Erase everything
 
-def limitedMenu(Favorites):
+def limitedMenu(ExchangeFavorites):
+    sys.stdout.write("\033[2J") #Erase everything
     print("Welcome to the Main Menu.")
     print("What would you like to do?")
     print("Input \"P\" to get current prices for your favorites.")
@@ -133,47 +292,69 @@ def limitedMenu(Favorites):
     answer = input()
     if answer is "P" or answer is "p":
         sys.stdout.write("\033[2J")  # Erase everything
-        printCurrentFavorites(Favorites,"limited")
+        printCurrentFavorites(ExchangeFavorites,"limited")
     elif answer is "k" or answer is "K":  # Look at open and closes on currencies in the last minute.
         binance.klines("BNBBTC", "1m")
     elif answer is "e" or answer is "exit":
         exit()
     else:
         print("You input something funky. Please try again.\n\n")
-        limitedMenu(Favorites)
+        limitedMenu(ExchangeFavorites)
 
-def fullMenu(Favorites):
-    print("Welcome to the Main Menu.")
-    print("What would you like to do?")
-    print("Input \"P\" to get current prices for your favorites.")
-    print("Input \"e\" to end the program.")
-    print("Input \"b\" to check the current balances on your account.")
-    print("Input \"o\" to place an order.")
-    print("Input \"c\" to cancel an order.")
-    print("Input \"s\" to view open order status.")
-    print("Input \"a\" to view all orders open or closed.")
+def fullMenu(ExchangeFavorites,CoinFavorites):
+    sys.stdout.write("\033[2J") #Erase everything
+    print("            Welcome to the Main Menu.")
+    print("          What would you like to do?\n")
+    print("===================================================")
+    print("================  Order Creation  =================")
+    print("Input \"p\" to get current prices for your favorites.")
+    print("Input \"b\" to check coin balances on your account.")
+    print("")
+    print("================  Order Creation  =================")
+    print("         Input \"o\" to place an order.         ")
+    print("         Input \"c\" to cancel an order.        ")
+    print("")
+    print("==================  View Orders  ==================")
+    print("      Input \"s\" to view open order status.    ")
+    print(" Input \"a\" to view all orders open or closed. ")
+    print("")
+    print("==================  End Program  ==================")
+    print("         Input \"e\" to end the program.        ")
+    print("===================================================")
     answer = input()
 
+    #Done
     if answer is "P" or answer is "p": #Look at Current Prices
         sys.stdout.write("\033[2J")  # Erase everything
-        printCurrentFavorites(Favorites,"full")
-    elif answer is "k" or answer is "K":  # Look at open and closes on currencies in the last minute.
-        binance.klines("BNBBTC", "1m")
+        printCurrentFavorites(ExchangeFavorites,CoinFavorites,"full")
+
+    #Done
     elif answer is "b" or answer is "B":  # Look at Current Balances on account
-        binance.balances()
+        clear()
+        checkBalances(ExchangeFavorites,CoinFavorites,0)
+
     elif answer is "o" or answer is "O":  # Place an order. Make sure this pulls up enough data for the user to know what they're doing.
-        binance.order("BTCUSDC", binance.BUY, 1000, 0.000001) #Display favorites and maybe show the last hour of data
+        clear()
+        createOrder(ExchangeFavorites, CoinFavorites)
+
     elif answer is "c" or answer is "C": #Cancel and order. Make sure to show current orders.
-        binance.cancel("BTCUSDC", orderId=123456789)
+        clear()
+        cancelOrder(ExchangeFavorites,CoinFavorites)
+
     elif answer is "s" or answer is "S":  # View open orders. This command must be run for each currency.
-        binance.openOrders("BTCUSDC")
+        clear()
+        openOrders(ExchangeFavorites,CoinFavorites,0)
+
     elif answer is "a" or answer is "A": #View all orders open or closed. Must run for each currency.
-        binance.allOrders("BTCUSDC")
+        clear()
+        allOrders(ExchangeFavorites,CoinFavorites)
+
     elif answer is "e" or answer is "exit": #Exit
+        clear()
         exit()
     else:
         print("You input something funky. Please try again.\n\n")
-        fullMenu(Favorites)
+        fullMenu(ExchangeFavorites,CoinFavorites)
 
 ###################################################################################################
 ##############The###########################Main###############################Code################
@@ -181,9 +362,11 @@ def fullMenu(Favorites):
 
 Banner() #Print Banner
 avaiableFeatures = getAPI() #Set API for the program.
-Favorites = setFavorites()
+ExchangeFavorites = setExchangeFavorites()
+CoinFavorites = setFavoriteCoins()
+
 if avaiableFeatures is 0: #If the user does not have API Keys
-    limitedMenu(Favorites)
+    limitedMenu(ExchangeFavorites)
 
 else: #If the user has API Keys
-    fullMenu(Favorites)
+    fullMenu(ExchangeFavorites,CoinFavorites)
