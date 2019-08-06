@@ -1,3 +1,12 @@
+'''
+Script Created by Dean Sheldon
+Works with Python 3
+This script is good on any linux distribution that works with Python 3 and has an active internet connection.
+It is used for Buying/Selling/Viewing crypto in your Binance Account
+The creator of this script is not responsible for any financal gains or losses that you may make using this script.
+You are sole responsible for the actions that come from your actions.
+'''
+
 import binance
 from datetime import datetime
 import sys
@@ -16,7 +25,6 @@ def setExchangeFavorites():
     #Delit using the spaces, then make it a list.
     favorites = list(answer.split(" "))
     return favorites
-
     '''
     favorites = ["BTCUSDC", "ZECUSDC", "NPXSBTC"] #Add your favorite coins to be printed here.
     verifyInput(favorites)
@@ -31,7 +39,7 @@ def setFavoriteCoins():
     return favorites
 
     '''
-    favorites = ["BTC", "ZEC", "NPXS"] #Add your favorite coins to be printed here.
+    favorites = ["BTC", "ZEC", "NPXS", "USDC"] #Add your favorite coins to be printed here.
     return favorites #A List
 def clear():
     sys.stdout.write("\033[2J")  # Erase everything
@@ -209,7 +217,9 @@ def printCurrentFavoriteOnce(ExchangeFavorites,CoinFavorites): #Prints the curre
 def getAPI():
     #Input your API keys here.
     # Set the keys. binance.set("API Key","Secret")
-    
+    APIKey = "UXrKsrFcPkw2dfZ9EqPsNllceRpFSipHJnzFhO4Td9dk6HoiFdrDUAKmpaDkjry3"
+    APISecret = "L2io7IRwFj5A2DDfp9Z8Bpw37wDX7iZXo2oC1l0dEr8IrEgSq9GzlOAXQaUTcecE"
+
     #APIKey = "INPUT_KEY_HERE"
     #APISecret = "INPUT_SECRET_HERE"
 
@@ -217,7 +227,7 @@ def getAPI():
         print("WARNING: You did not input your API keys. All this program can do for you is show you current prices")
         return 0
 
-    #binance.set("Key", "Secret")
+    #binance.set("UXrKsrFcPkw2dfZ9EqPsNllceRpFSipHJnzFhO4Td9dk6HoiFdrDUAKmpaDkjry3", "L2io7IRwFj5A2DDfp9Z8Bpw37wDX7iZXo2oC1l0dEr8IrEgSq9GzlOAXQaUTcecE")
     binance.set(APIKey, APISecret)
     print("Your keys are all set.")
     return 1
