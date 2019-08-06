@@ -103,6 +103,10 @@ Place 1000 lot buy order at 0.000001 on BNBBTC
 ```
 binance.order("BNBBTC", binance.BUY, 1000, 0.000001)
 ```
+Place 1000 lot sell order at 0.000001 on BNBBTC
+```
+binance.order("BNBBTC", binance.SELL, 1000, 0.000001)
+```
 Example response
 ```
 {u'clientOrderId': u'fud8s7yw8o4wry7',
